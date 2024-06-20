@@ -35,7 +35,7 @@ class WordEmbedding:
     def generate_word_embeddings(self)->list:
         if self.type == 'Document':
             model_word_embeddings = SentenceTransformer("bert-base-nli-mean-tokens")
-            return model_word_embeddings.encode(self.text.Text,show_progress_bar=True)
+            return np.array(model_word_embeddings.encode(self.text.Text,show_progress_bar=True))
         else:
             return self.wordEmbeddings(self.text)
     #@function read_from_file is used to read word embeddings from an existing file.
@@ -51,7 +51,7 @@ class WordEmbedding:
         #data
         if 'DLA' in self.text.columns:
             dataframe = pd.DataFrame(columns=['ID','Text','Word_Embeddings','DLA'])
-            for i in zip(self.text.ID[self.text['topic'] == 'ACCIDENT'],self.text.Text[self.text['topic'] == 'ACCIDENT'],self.word_emb,self.text.DLA[self.text['topic'] == 'ACCIDENT']):
+            for i in zip(self.text.ID,self.text.Text,self.word_emb,self.text.DLA):
                 if dataframe.empty:
                     dataframe.loc[0]=list(i)
                 else:
@@ -59,12 +59,14 @@ class WordEmbedding:
                 
         else:
             dataframe = pd.DataFrame(columns=['ID','Text','Word_Embeddings'])
-            for i in zip(self.text.ID[self.text['topic'] == 'ACCIDENT'],self.text.Text[self.text['topic'] == 'ACCIDENT'],self.word_emb):
+            for i in zip(self.text.ID,self.text.Text,self.word_emb):
                 if dataframe.empty:
                     dataframe.loc[0]=list(i)
                     
                 else:
                     dataframe.loc[len(dataframe.index)]=list(i)
+        np.savetxt(f'{self.type}_word_emb.csv',self.word_emb)
+        
                 
             
         dataframe.to_csv('df.csv')   
