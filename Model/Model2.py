@@ -42,7 +42,11 @@ class Spectral_Clustering_Model:
         for i in indices:
             print(i)
             self.graph.add_edge(self.id[i[0]],self.id[i[1]],weights=similarity_score[i[0],i[1]])
-        adjacency_matrix = networkx.to_numpy_array(self.graph)
+        adjacency_matrix = np.zeros((len(data),)*2)
+        index = pd.Index(self.id)
+        for (u,v,d) in self.graph.edges(data=True):
+            adjacency_matrix[index.get_loc(u),index.get_loc(v)] = d['weights']
+            adjacency_matrix[index.get_loc(v),index.get_loc(u)] = d['weights']
         return adjacency_matrix
         
     @staticmethod
@@ -69,6 +73,7 @@ class Spectral_Clustering_Model:
         fiedler_index = 0
         fiedler_value = None
         min_eigen_value = min(eigen_values)
+        min_eigen_pos = np.where(eigen_values == min_eigen_value)[0][0]
         for i in range(len(eigen_values)):
             curr_value = eigen_values[i]
             if fiedler_value == None:
@@ -80,8 +85,11 @@ class Spectral_Clustering_Model:
             else:
                 continue
         fiedler_vectors = np.transpose(eigen_vectors)[fiedler_index]
+        min_eigen_vectors = np.transpose(eigen_vectors)[min_eigen_pos]
+        print(eigen_vectors)
+        print(eigen_values)
         self.model=sklearn.cluster.KMeans(n_clusters = self.n_clusters)
-        self.model.fit(fiedler_vectors)
+        self.model.fit([min_eigen_vectors,fiedler_vectors])
         self.labels = self.model.labels_
         self.fiedler_vectors = fiedler_vectors
         self.fiedler_value = fiedler_value
