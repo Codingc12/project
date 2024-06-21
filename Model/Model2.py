@@ -72,10 +72,10 @@ class Spectral_Clustering_Model:
         eigen_vectors = eigen_v[1]
         fiedler_index = 0
         fiedler_value = None
-        min_eigen_value = min(eigen_values)
-        min_eigen_pos = np.where(eigen_values == min_eigen_value)[0][0]
+        min_eigen_value = min(eigen_values.real)
+        min_eigen_pos = np.where(eigen_values.real == min_eigen_value)[0][0]
         for i in range(len(eigen_values)):
-            curr_value = eigen_values[i]
+            curr_value = eigen_values.real[i]
             if fiedler_value == None:
                 fiedler_index = i
                 fiedler_value = curr_value
@@ -89,9 +89,9 @@ class Spectral_Clustering_Model:
         print(eigen_vectors)
         print(eigen_values)
         self.model=sklearn.cluster.KMeans(n_clusters = self.n_clusters)
-        self.model.fit([min_eigen_vectors,fiedler_vectors])
+        self.model.fit([min_eigen_vectors.real,fiedler_vectors.real])
         self.labels = self.model.labels_
-        self.fiedler_vectors = fiedler_vectors
-        self.fiedler_value = fiedler_value
+        self.fiedler_vectors = fiedler_vectors.real
+        self.fiedler_value = fiedler_value.real
         
         

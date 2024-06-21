@@ -17,5 +17,6 @@ if __name__ == '__main__':
     model = scm(a.ID, Word_E['csv//target.csv'].word_emb)
     print(model.adjacency_matrix)
     model.fit_model()
-    print(model.fiedler_value,model.fiedler_vectors)
+    #print(model.fiedler_value,model.fiedler_vectors)
+    print(model.labels)
     
