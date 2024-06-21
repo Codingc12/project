@@ -3,6 +3,7 @@ import numpy as np
 import sklearn
 import pandas as pd
 import sklearn.cluster
+import sklearn.metrics
 
 class Spectral_Clustering_Model:
     def __init__(self, id ,dataframe: pd.DataFrame, n_components: int =100, 
@@ -34,6 +35,7 @@ class Spectral_Clustering_Model:
     def build_adjacency_matrix(self,data_:pd.DataFrame)->np.ndarray:
         pca_model = sklearn.decomposition.PCA(n_components=self.components)
         data = pca_model.fit_transform(data_)
+        self.data =data
         print(data.shape)
         similarity_score = Spectral_Clustering_Model.cosine_similarity(data)
         indices = Spectral_Clustering_Model.knn(similarity_score)
@@ -51,7 +53,7 @@ class Spectral_Clustering_Model:
         
     @staticmethod
     def knn(similarity_score):
-        indices = np.argwhere(similarity_score>7)
+        indices = np.argwhere(similarity_score>0)
         return indices
        
     
@@ -88,10 +90,11 @@ class Spectral_Clustering_Model:
         min_eigen_vectors = np.transpose(eigen_vectors)[min_eigen_pos]
         print(eigen_vectors)
         print(eigen_values)
-        self.model=sklearn.cluster.KMeans(n_clusters = self.n_clusters)
-        self.model.fit([min_eigen_vectors.real,fiedler_vectors.real])
+        self.model=sklearn.cluster.AgglomerativeClustering(n_clusters = self.n_clusters)
+        self.model.fit(list(zip(min_eigen_vectors.real,fiedler_vectors.real)))
         self.labels = self.model.labels_
         self.fiedler_vectors = fiedler_vectors.real
         self.fiedler_value = fiedler_value.real
-        
-        
+        print("Silhouette Score",sklearn.metrics.silhouette_samples(list(zip(min_eigen_vectors.real,fiedler_vectors.real)),self.labels))
+        np.savetxt("model_labels.csv",list(self.labels))
+        print("SS",sklearn.metrics.silhouette_score(self.data,self.labels))
