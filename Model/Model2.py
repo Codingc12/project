@@ -6,12 +6,12 @@ import sklearn.cluster
 import sklearn.metrics
 
 class Spectral_Clustering_Model:
-    def __init__(self, id ,dataframe: pd.DataFrame, n_components: int =100, 
+    def __init__(self, id ,dataframe: pd.DataFrame, threshold: int,n_components: int =100, 
                  n_clusters: int =2):
         self.id = id
         self.n_clusters = n_clusters
         self.components = n_components
-        self.adjacency_matrix = self.build_adjacency_matrix(dataframe)
+        self.adjacency_matrix = self.build_adjacency_matrix(dataframe, threshold)
         self.degree_matrix = self.build_degree_matrix()
         self.laplacian_matrix = self.build_laplacian_matrix()
         
@@ -32,17 +32,17 @@ class Spectral_Clustering_Model:
                 
                 
             
-    def build_adjacency_matrix(self,data_:pd.DataFrame)->np.ndarray:
+    def build_adjacency_matrix(self,data_:pd.DataFrame, threshold: int)->np.ndarray:
         pca_model = sklearn.decomposition.PCA(n_components=self.components)
         data = pca_model.fit_transform(data_)
         self.data =data
         print(data.shape)
         similarity_score = Spectral_Clustering_Model.cosine_similarity(data)
-        indices = Spectral_Clustering_Model.knn(similarity_score)
+        indices = Spectral_Clustering_Model.knn(similarity_score, threshold)
         self.graph = networkx.Graph()
-        print(similarity_score)
+        
         for i in indices:
-            print(i)
+            
             self.graph.add_edge(self.id[i[0]],self.id[i[1]],weights=similarity_score[i[0],i[1]])
         adjacency_matrix = np.zeros((len(data),)*2)
         index = pd.Index(self.id)
@@ -52,8 +52,8 @@ class Spectral_Clustering_Model:
         return adjacency_matrix
         
     @staticmethod
-    def knn(similarity_score):
-        indices = np.argwhere(similarity_score>0)
+    def knn(similarity_score,threshold: int):
+        indices = np.argwhere(similarity_score>threshold)
         return indices
        
     
@@ -88,13 +88,13 @@ class Spectral_Clustering_Model:
                 continue
         fiedler_vectors = np.transpose(eigen_vectors)[fiedler_index]
         min_eigen_vectors = np.transpose(eigen_vectors)[min_eigen_pos]
-        print(eigen_vectors)
-        print(eigen_values)
+        #print(eigen_vectors)
+        #print(eigen_values)
         self.model=sklearn.cluster.AgglomerativeClustering(n_clusters = self.n_clusters)
         self.model.fit(list(zip(min_eigen_vectors.real,fiedler_vectors.real)))
         self.labels = self.model.labels_
         self.fiedler_vectors = fiedler_vectors.real
         self.fiedler_value = fiedler_value.real
-        print("Silhouette Score",sklearn.metrics.silhouette_samples(list(zip(min_eigen_vectors.real,fiedler_vectors.real)),self.labels))
-        np.savetxt("model_labels.csv",list(self.labels))
+        print("Silhouette Score",sklearn.metrics.silhouette_score(list(zip(min_eigen_vectors.real,fiedler_vectors.real)),self.labels))
+        #np.savetxt("model_labels.csv",list(self.labels))
         print("SS",sklearn.metrics.silhouette_score(self.data,self.labels))
