@@ -24,6 +24,6 @@ for i in topics:
     for j in range(0,10):
         print(j)
         model = scm(ids,embeddings,j)
-        model.fit_model()
+        model.fit_model(3)
     
     

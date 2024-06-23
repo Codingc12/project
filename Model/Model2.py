@@ -68,7 +68,7 @@ class Spectral_Clustering_Model:
             
     def build_laplacian_matrix(self):
         return np.subtract(self.degree_matrix,self.adjacency_matrix)
-    def fit_model(self):
+    def fit_model(self,no_of_vectors: int = 2):
         eigen_v = np.linalg.eig(self.laplacian_matrix)
         eigen_values = eigen_v[0]
         eigen_vectors = eigen_v[1]
@@ -88,13 +88,37 @@ class Spectral_Clustering_Model:
                 continue
         fiedler_vectors = np.transpose(eigen_vectors)[fiedler_index]
         min_eigen_vectors = np.transpose(eigen_vectors)[min_eigen_pos]
-        #print(eigen_vectors)
-        #print(eigen_values)
-        self.model=sklearn.cluster.AgglomerativeClustering(n_clusters = self.n_clusters)
-        self.model.fit(list(zip(min_eigen_vectors.real,fiedler_vectors.real)))
-        self.labels = self.model.labels_
+        
+        if no_of_vectors>2:
+            
+            sorted_ = np.sort(eigen_values.real)
+            eigen_value_pos = [min_eigen_pos,fiedler_index]
+            [eigen_value_pos.append(np.where(eigen_values.real == i)[0][0]) for i in sorted_[2:no_of_vectors]]
+            transposed_ = np.transpose(eigen_vectors)
+            c_eig_vecs = [transposed_[i].real for i in eigen_value_pos]
+            cluster_vectors = []
+            for i in range(len(c_eig_vecs[0])):
+                new_list = []
+                for j in c_eig_vecs:
+                    new_list.append(j[i])
+                cluster_vectors.append(tuple(new_list))
+            self.model=sklearn.cluster.AgglomerativeClustering(n_clusters = self.n_clusters)
+            self.model.fit(cluster_vectors)
+            self.labels = self.model.labels_
+            print("Silhouette Score",sklearn.metrics.silhouette_score(cluster_vectors,self.labels))
+                    
+                    
+                
+        
+        else:
+            self.model=sklearn.cluster.AgglomerativeClustering(n_clusters = self.n_clusters)
+            self.model.fit(list(zip(min_eigen_vectors.real,fiedler_vectors.real)))
+            self.labels = self.model.labels_
+            print("Silhouette Score",sklearn.metrics.silhouette_score(list(zip(min_eigen_vectors.real,fiedler_vectors.real)),self.labels))
+        
         self.fiedler_vectors = fiedler_vectors.real
         self.fiedler_value = fiedler_value.real
-        print("Silhouette Score",sklearn.metrics.silhouette_score(list(zip(min_eigen_vectors.real,fiedler_vectors.real)),self.labels))
+        
         #np.savetxt("model_labels.csv",list(self.labels))
-        print("SS",sklearn.metrics.silhouette_score(self.data,self.labels))
+        
+        

@@ -17,10 +17,12 @@ if __name__ == '__main__':
         Word_E[i] =word_embeddings.WordEmbedding('Document',data)
     a = Word_E['csv//target.csv'].write_file()
 
-    for i in range(-1,10):
+    for i in range(5,10):
         print("Threshold:", i)
-        model = scm(a.ID, Word_E['csv//target.csv'].word_emb, i)
-        model.fit_model()
+        for j in range(2,11):
+            print("No. of eigen vectors",j)
+            model = scm(a.ID, Word_E['csv//target.csv'].word_emb, i)
+            model.fit_model(j)
         
     
     #print(model.fiedler_value,model.fiedler_vectors)
